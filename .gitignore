@@ -1,0 +1,11 @@
+# PBS token output files (contain secrets)
+.pbs_token_create.out
+.pbs_tls_fingerprint.out
+
+# Temp files
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

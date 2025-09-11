@@ -4,36 +4,52 @@ source "$(dirname "$0")/00-env.sh"
 
 for DS in "${DATASTORES[@]}"; do
   JOB="keep-${DS}"
-  if ! proxmox-backup-manager prune-job list | awk '{print $1}' | grep -qx "$JOB"; then
-    proxmox-backup-manager prune-job create "$JOB" \
+  
+  # Check if prune job exists with more robust method
+  if proxmox-backup-manager prune-job show "$JOB" >/dev/null 2>&1; then
+    echo "Prune job $JOB already exists - skipping creation"
+  else
+    echo "Creating prune job $JOB on $DS..."
+    if proxmox-backup-manager prune-job create "$JOB" \
       --store "$DS" \
       --schedule "daily" \
-      --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --keep-yearly 1
-    echo "Created prune job $JOB on $DS"
-  else
-    echo "Prune job $JOB exists"
+      --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --keep-yearly 1; then
+      echo "✅ Created prune job $JOB on $DS"
+    else
+      echo "⚠️  Failed to create prune job $JOB (may already exist)"
+    fi
   fi
 
   VJ="verify-${DS}-weekly"
-  if ! proxmox-backup-manager verify-job list | awk '{print $1}' | grep -qx "$VJ"; then
-    proxmox-backup-manager verify-job create "$VJ" \
+  # Check if weekly verify job exists
+  if proxmox-backup-manager verify-job show "$VJ" >/dev/null 2>&1; then
+    echo "Weekly verify job $VJ already exists - skipping creation"
+  else
+    echo "Creating weekly verify job $VJ on $DS..."
+    if proxmox-backup-manager verify-job create "$VJ" \
       --store "$DS" \
       --schedule "$WEEKLY" \
-      --outdated-only true
-    echo "Created verify job $VJ on $DS"
-  else
-    echo "Verify job $VJ exists"
+      --outdated-only true; then
+      echo "✅ Created weekly verify job $VJ on $DS"
+    else
+      echo "⚠️  Failed to create weekly verify job $VJ (may already exist)"
+    fi
   fi
 
   VD="verify-${DS}-daily"
-  if ! proxmox-backup-manager verify-job list | awk '{print $1}' | grep -qx "$VD"; then
-    proxmox-backup-manager verify-job create "$VD" \
+  # Check if daily verify job exists
+  if proxmox-backup-manager verify-job show "$VD" >/dev/null 2>&1; then
+    echo "Daily verify job $VD already exists - skipping creation"
+  else
+    echo "Creating daily verify job $VD on $DS..."
+    if proxmox-backup-manager verify-job create "$VD" \
       --store "$DS" \
       --schedule "$NIGHTLY" \
       --max-worker 1 \
-      --outdated-only true
-    echo "Created verify job $VD on $DS"
-  else
-    echo "Verify job $VD exists"
+      --outdated-only true; then
+      echo "✅ Created daily verify job $VD on $DS"
+    else
+      echo "⚠️  Failed to create daily verify job $VD (may already exist)"
+    fi
   fi
 done

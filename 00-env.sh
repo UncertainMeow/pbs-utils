@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# PBS Host - can be hostname or IP address
+# If hostname: scripts validate they're running on that host
+# If IP address: scripts validate that IP exists on this host
 PBS_HOST="plato"
 
 # datastores to manage

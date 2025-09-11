@@ -2,10 +2,22 @@
 set -euo pipefail
 source "$(dirname "$0")/00-env.sh"
 
+# Validate we're running on the correct PBS host
 HOSTNAME_NOW=$(hostname -s)
-if [[ "$HOSTNAME_NOW" != "$PBS_HOST" ]]; then
-  echo "Run this on PBS host ${PBS_HOST}. Current host is ${HOSTNAME_NOW}"
-  exit 1
+if [[ "$PBS_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  # PBS_HOST is an IP address - check if we can reach it locally
+  if ! ip addr show | grep -q "$PBS_HOST"; then
+    echo "PBS_HOST is set to IP $PBS_HOST but this host doesn't have that IP"
+    echo "Current host: $HOSTNAME_NOW"
+    echo "If this is the correct PBS host, make sure PBS_HOST is set correctly in 00-env.sh"
+    exit 1
+  fi
+else
+  # PBS_HOST is a hostname - check if we're on that host
+  if [[ "$HOSTNAME_NOW" != "$PBS_HOST" ]]; then
+    echo "Run this on PBS host ${PBS_HOST}. Current host is ${HOSTNAME_NOW}"
+    exit 1
+  fi
 fi
 
 TMPCRON="$(mktemp)"

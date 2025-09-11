@@ -17,9 +17,15 @@ fi
 # create token if missing
 TOKEN_ID="${PBS_USER}!${PBS_TOKEN_NAME}"
 if ! proxmox-backup-manager user list-tokens "$PBS_USER" | awk '{print $1}' | grep -qx "$TOKEN_ID"; then
-  # generate token  capture secret  no --privs here
-  proxmox-backup-manager user generate-token "$PBS_USER" "$PBS_TOKEN_NAME" --output-format json-pretty \
-    | tee .pbs_token_create.out
+  # generate token  capture secret
+  # Try without --privs first (newer PBS versions)
+  if ! proxmox-backup-manager user generate-token "$PBS_USER" "$PBS_TOKEN_NAME" \
+    | tee .pbs_token_create.out 2>/dev/null; then
+    # Fallback to old syntax with --privs (older PBS versions)
+    echo "Token creation failed, trying legacy --privs syntax..."
+    proxmox-backup-manager user generate-token "$PBS_USER" "$PBS_TOKEN_NAME" \
+      --privs "Datastore.Backup Datastore.Audit" | tee .pbs_token_create.out
+  fi
   echo "Saved token output to .pbs_token_create.out  store secret in 1Password"
 else
   echo "Token $TOKEN_ID already exists  if you need the secret delete and recreate"

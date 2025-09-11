@@ -9,10 +9,14 @@ if [[ "$USE_TOKEN" == "true" ]]; then
 fi
 
 for DS in "${DATASTORES[@]}"; do
-  # tokens do not accept --privs  you assign roles via ACLs
-  proxmox-backup-manager acl update "/datastore/${DS}" DatastoreAudit  --auth-id "$AUTH_ID"
-  proxmox-backup-manager acl update "/datastore/${DS}" DatastoreBackup --auth-id "$AUTH_ID"
-  echo "Granted DatastoreAudit and DatastoreBackup on ${DS} to ${AUTH_ID}"
-  # optional read rights
-  # proxmox-backup-manager acl update "/datastore/${DS}" DatastoreReader --auth-id "$AUTH_ID"
+  # Try new ACL syntax first (role-based with --auth-id)
+  if proxmox-backup-manager acl update "/datastore/${DS}" DatastoreAudit --auth-id "$AUTH_ID" 2>/dev/null && \
+     proxmox-backup-manager acl update "/datastore/${DS}" DatastoreBackup --auth-id "$AUTH_ID" 2>/dev/null; then
+    echo "Granted DatastoreAudit and DatastoreBackup on ${DS} to ${AUTH_ID} (new syntax)"
+  else
+    # Fallback to old syntax (subject with --privs)
+    echo "New syntax failed, trying legacy --privs syntax..."
+    proxmox-backup-manager acl update "/datastore/${DS}" "$AUTH_ID" --privs "Datastore.Backup,Datastore.Audit"
+    echo "Granted Datastore.Backup,Datastore.Audit on ${DS} to ${AUTH_ID} (legacy syntax)"
+  fi
 done

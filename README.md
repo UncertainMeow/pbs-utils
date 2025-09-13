@@ -32,7 +32,7 @@ export PBS_SECRET='your-token-secret'
 
 - If ping plato fails on a PVE node add a hosts entry:
   ```bash
-  echo "10.203.3.50 plato" >> /etc/hosts
+  echo "10.203.3.97 plato" >> /etc/hosts
   ```
   or set PBS_HOST to the IP in 00-env.sh
 

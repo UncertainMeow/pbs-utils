@@ -20,7 +20,7 @@ PBS_TOKEN_NAME="pve-token"     # token id is pve-backup@pbs!pve-token
 
 # ZFS pool detection on PBS
 # set this once later if you add more pools
-# ZPOOL_PREFERRED="pbs"
+ZPOOL_PREFERRED="zpbs"
 ZPOOL_PREFERRED="${ZPOOL_PREFERRED:-}"
 ZPOOL="${ZPOOL:-}"
 

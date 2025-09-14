@@ -29,7 +29,7 @@ for DS in "${DATASTORES[@]}"; do
     if proxmox-backup-manager verify-job create "$VJ" \
       --store "$DS" \
       --schedule "$WEEKLY" \
-      --outdated-only true; then
+      --ignore-verified true; then
       echo "✅ Created weekly verify job $VJ on $DS"
     else
       echo "⚠️  Failed to create weekly verify job $VJ (may already exist)"
@@ -45,8 +45,7 @@ for DS in "${DATASTORES[@]}"; do
     if proxmox-backup-manager verify-job create "$VD" \
       --store "$DS" \
       --schedule "$NIGHTLY" \
-      --max-worker 1 \
-      --outdated-only true; then
+      --ignore-verified true; then
       echo "✅ Created daily verify job $VD on $DS"
     else
       echo "⚠️  Failed to create daily verify job $VD (may already exist)"

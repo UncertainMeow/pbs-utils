@@ -2,6 +2,17 @@
 set -euo pipefail
 source "$(dirname "$0")/00-env.sh"
 
+# Check dependencies
+if ! command -v jq >/dev/null; then
+  echo "Installing jq..."
+  apt update && apt install -y jq
+fi
+
+if ! command -v pvesh >/dev/null; then
+  echo "pvesh command not found - are you running this on a PVE node?"
+  exit 1
+fi
+
 # requires PBS_SECRET env var containing the token secret
 if [[ -z "${PBS_SECRET:-}" ]]; then
   echo "Export PBS_SECRET with your token secret then re-run"

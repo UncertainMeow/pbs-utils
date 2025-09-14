@@ -6,9 +6,10 @@ openssl s_client -connect "${PBS_HOST}:8007" -showcerts </dev/null 2>/dev/null |
   openssl x509 -fingerprint -noout -sha256
 
 # Test PBS connectivity and datastore availability
-proxmox-backup-manager status
+proxmox-backup-manager node show
 proxmox-backup-manager datastore list
 
 for DS in "${DATASTORES[@]}"; do
-  proxmox-backup-manager verify run "verify-${DS}-daily" || true
+  echo "Running verification test for datastore: $DS"
+  proxmox-backup-manager verify-job run "verify-${DS}-daily" || echo "  No backups to verify yet for $DS"
 done

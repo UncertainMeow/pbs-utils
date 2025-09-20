@@ -15,8 +15,8 @@ WEEKLY="Sat 04:30"
 GCWEEKLY="Sun 05:15"
 
 # backup user and token on PBS
-PBS_USER="pve-backup@pbs"
-PBS_TOKEN_NAME="pve-token"     # token id is pve-backup@pbs!pve-token
+PBS_USER="pve-backup@pam"
+PBS_TOKEN_NAME="pve-token"     # token id is pve-backup@pam!pve-token
 
 # ZFS pool detection on PBS (only run if zpool command exists)
 # set this once later if you add more pools

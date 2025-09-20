@@ -24,27 +24,38 @@ ZPOOL_PREFERRED="zpbs"
 ZPOOL_PREFERRED="${ZPOOL_PREFERRED:-}"
 ZPOOL="${ZPOOL:-}"
 
-# Only do ZFS pool detection if running on PBS host
+# Only do ZFS pool detection if we can determine we're on PBS host
+# Don't fail on PVE nodes that don't have ZFS
 if command -v zpool >/dev/null 2>&1; then
+  # Check if we're on the PBS host (either by hostname or IP)
+  ON_PBS_HOST=false
+  if [[ "$PBS_HOST" == "$(hostname)" ]] || [[ "$PBS_HOST" == "$(hostname -f)" ]]; then
+    ON_PBS_HOST=true
+  elif command -v ip >/dev/null 2>&1 && ip addr show | grep -q "$PBS_HOST"; then
+    ON_PBS_HOST=true
+  fi
+
   if [[ -n "$ZPOOL_PREFERRED" ]]; then
     if zpool list -H -o name | grep -qx "$ZPOOL_PREFERRED"; then
       ZPOOL="$ZPOOL_PREFERRED"
-    else
-      echo "Preferred pool '$ZPOOL_PREFERRED' not found. Pools available:"
+    elif [[ "$ON_PBS_HOST" == "true" ]]; then
+      echo "❌ Preferred pool '$ZPOOL_PREFERRED' not found on PBS host. Pools available:"
       zpool list -H -o name
       exit 1
     fi
   fi
 
   if [[ -z "$ZPOOL" ]]; then
-    POOLS=$(zpool list -H -o name | awk 'NF')
-    COUNT=$(echo "$POOLS" | wc -l | tr -d ' ')
-    if [[ "$COUNT" -eq 1 ]]; then
-      ZPOOL="$POOLS"
-    else
-      echo "Multiple pools found. Set ZPOOL_PREFERRED or ZPOOL in 00-env.sh then re-run."
-      echo "$POOLS"
-      exit 1
+    POOLS=$(zpool list -H -o name | awk 'NF' 2>/dev/null || echo "")
+    if [[ -n "$POOLS" ]]; then
+      COUNT=$(echo "$POOLS" | wc -l | tr -d ' ')
+      if [[ "$COUNT" -eq 1 ]]; then
+        ZPOOL="$POOLS"
+      elif [[ "$ON_PBS_HOST" == "true" ]]; then
+        echo "❌ Multiple pools found on PBS host. Set ZPOOL_PREFERRED or ZPOOL in 00-env.sh then re-run."
+        echo "$POOLS"
+        exit 1
+      fi
     fi
   fi
 fi
